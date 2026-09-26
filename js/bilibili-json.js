@@ -1,7 +1,7 @@
 const url = $request.url;
 const method = $request.method;
 const notifyTitle = "bilibili-json";
-console.log(`b站json-2023.10.22`);
+console.log(`b站json-2023.10.22 (+刷视频去广告 2026-09-27)`);
 if (!$response.body) {
     // 有undefined的情况
     console.log(`$response.body为undefined:${url}`);
@@ -59,6 +59,30 @@ if (!body.data) {
                 return true;
             });
             fixPos(body.data.bottom);
+        }
+    } else if (url.includes("x/v2/feed/index/story")) {
+        // 「刷视频」竖屏沉浸式 feed。必须排在 feed/index 分支之前，
+        // 否则会被上面那条 includes("x/v2/feed/index") 抢先匹配走错逻辑。
+        console.log('刷视频(竖屏story)');
+        if (!Array.isArray(body.data.items)) {
+            console.log(`body:${$response.body}`);
+            $notification.post(notifyTitle, '刷视频', "items字段错误");
+        } else {
+            const adGoto = ['vertical_ad_av', 'vertical_ad_live', 'vertical_ad_picture'];
+            const before = body.data.items.length;
+            body.data.items = body.data.items.filter(item => {
+                if (item.ad_info || !item.card_goto || adGoto.includes(item.card_goto)) {
+                    return false;
+                }
+                // 顺带清掉购物车图标、免流提示、课程/游戏推广位
+                delete item.story_cart_icon;
+                delete item.free_flow_toast;
+                delete item.image_infos;
+                delete item.course_info;
+                delete item.game_info;
+                return true;
+            });
+            console.log(`刷视频去广告: ${before} -> ${body.data.items.length}`);
         }
     } else if (url.includes("x/v2/feed/index")) {
         console.log('推荐页');

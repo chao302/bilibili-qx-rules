@@ -24,7 +24,7 @@ https://raw.githubusercontent.com/chao302/bilibili-qx-rules/main/module/bilibili
 
 | | |
 |---|---|
-| 保留 | 开屏广告、推荐页信息流广告、底栏(发布/会员购)、右上角游戏中心、动态页广告 |
+| 保留 | 开屏广告、推荐页信息流广告、**「刷视频」竖屏广告**、底栏(发布/会员购)、右上角游戏中心、动态页广告 |
 | 失去 | 视频播放页「UP主推荐」位的广告 |
 
 ### 保险档 `module/bilibili-qx-safe.conf`
@@ -37,8 +37,18 @@ https://raw.githubusercontent.com/chao302/bilibili-qx-rules/main/module/bilibili
 
 | | |
 |---|---|
-| 保留 | 开屏广告、推荐页信息流广告、底栏(发布/会员购)、右上角游戏中心 |
+| 保留 | 开屏广告、推荐页信息流广告、**「刷视频」竖屏广告**、底栏(发布/会员购)、右上角游戏中心 |
 | 失去 | 播放页「UP主推荐」广告、动态页广告 |
+
+## 「刷视频」竖屏广告过滤
+
+`js/bilibili-json.js` 增加了对 `app.bilibili.com/x/v2/feed/index/story` 的处理——这是「刷视频」沉浸式竖屏 feed 的接口。
+
+判定逻辑：剔除带 `ad_info` 字段的条目，以及 `card_goto` 为 `vertical_ad_av`（视频广告）、`vertical_ad_live`（直播广告）、`vertical_ad_picture`（图片广告）的条目；保留下来的条目再清掉 `story_cart_icon`（购物车角标）、`free_flow_toast`（免流提示）、`image_infos`、`course_info`（课程推广）、`game_info`（游戏推广）。
+
+判定字段与 [fmz200/wool_scripts](https://github.com/fmz200/wool_scripts)、[kokoryh/Sparkle](https://github.com/kokoryh/Sparkle) 两个仍在活跃维护的项目交叉核对一致。
+
+**这条是纯 JSON 接口、非 gRPC**，因此不经过 protobuf 脚本，对评论区加载没有任何影响——推荐档和保险档都包含此过滤。
 
 ## 使用方式
 
